@@ -38,7 +38,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
     menu_items={
-        "Get Help": "https://github.com/paulsentongo/plant-disease-classifier",
+        "Get Help": "https://github.com/Sentoz/Plant-Disease-Classifier",
         "About": "Built by Paul Sentongo · EfficientNetV2 · PyTorch · MLflow",
     },
 )
@@ -149,22 +149,65 @@ st.markdown("""
 
 
 # ── Model loading with caching ────────────────────────────────────────────────
-# This function is decorated with @st.cache_resource which means Streamlit will
-# call it exactly once, store the result (the model object) in memory, and
-# return the same object on every subsequent call — even across user sessions.
-# This is critical for performance: loading a 22M-parameter model takes 2–3
-# seconds; we only want to pay that cost once.
-@st.cache_resource(show_spinner="Loading AI model... (first time only)")
+# @st.cache_resource runs this function exactly once, stores the model object
+# in memory, and returns the same object on every subsequent Streamlit rerun —
+# even across multiple browser sessions on HF Spaces.
+#
+# Model resolution order:
+#   1. Local file at models/best_model.pth  (present after local training)
+#   2. Download from Hugging Face Hub       (present on HF Spaces deployment)
+#   3. Return None with an error message    (demo mode — no model loaded)
+#
+# On HF Spaces the local file will not exist because we never commit .pth files
+# to git.  The Hub download path kicks in automatically.
+@st.cache_resource(show_spinner="Loading AI model... (downloading on first run, cached after)")
 def load_model_cached(model_path: str, config: dict):
-    """Load the trained model once and cache it for all users."""
+    """
+    Load the trained model, falling back to HF Hub download if needed.
+
+    Returns
+    -------
+    tuple
+        (model, device, error_message)
+        If loading succeeds, error_message is None.
+        If loading fails, model and device are None.
+    """
+    from src.utils.model_hub import (
+        download_model_from_hub,
+        model_is_available_locally,
+        MODEL_REPO_ID,
+        MODEL_FILENAME,
+    )
+
+    device = torch.device(
+        "cuda" if torch.cuda.is_available() else
+        "mps"  if torch.backends.mps.is_available() else
+        "cpu"
+    )
+
+    # Step 1: check if the model already exists locally (post-training or cached)
+    resolved_path = model_path
+    if not model_is_available_locally(model_path):
+        # Step 2: try downloading from HF Hub
+        try:
+            local_dir = str(PROJECT_ROOT / "models")
+            resolved_path = download_model_from_hub(
+                repo_id=MODEL_REPO_ID,
+                filename=MODEL_FILENAME,
+                local_dir=local_dir,
+            )
+        except Exception as hub_error:
+            return None, None, (
+                f"Model not found locally and Hub download failed.\n\n"
+                f"To fix this:\n"
+                f"  1. Train the model:  python train.py\n"
+                f"  2. Deploy the model: python deploy.py\n\n"
+                f"Hub error: {hub_error}"
+            )
+
     try:
-        device = torch.device(
-            "cuda" if torch.cuda.is_available() else
-            "mps"  if torch.backends.mps.is_available() else
-            "cpu"
-        )
         from predict import load_model
-        model = load_model(model_path, config, device)
+        model = load_model(resolved_path, config, device)
         return model, device, None
     except Exception as e:
         return None, None, str(e)

@@ -1,6 +1,18 @@
-# PlantMD — AI-Powered Plant Disease Classifier
+---
+title: PlantMD Plant Disease Classifier
+emoji: 🌿
+colorFrom: green
+colorTo: blue
+sdk: streamlit
+sdk_version: 1.35.0
+app_file: app.py
+pinned: true
+license: mit
+---
 
-## Built by Paul Sentongo
+## PlantMD — AI-Powered Plant Disease Classifier
+
+### Built by Paul Sentongo
 
 Every single year, plant diseases destroy somewhere between 20 and 40 percent of the world's food supply. That translates to hundreds of billions of dollars in losses, empty markets, and food insecurity for millions of families, especially in regions where a single crop is the difference between eating and not eating. The tragedy is that many of these losses are preventable. Catch the disease early, treat it correctly, and you save the harvest.
 

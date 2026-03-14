@@ -12,13 +12,16 @@
 # ============================================================
 
 # ── Deep Learning Framework ─────────────────────────────────
-# PyTorch is the backbone of the whole modelling pipeline.
-# We use the CPU-only build here so the requirements file works
-# on every machine.  If you have an NVIDIA GPU, replace these
-# three lines with the CUDA wheels from pytorch.org.
-torch==2.3.0
-torchvision==0.18.0
-torchaudio==2.3.0
+# We point pip at the PyTorch CPU-only index so the wheels are
+# ~250 MB instead of ~2.8 GB (the CUDA-bundled PyPI wheels).
+# Hugging Face Spaces free tier runs on CPU; this keeps cold-
+# start times short.  On a machine with an NVIDIA GPU, swap the
+# index URL for https://download.pytorch.org/whl/cu121 and use
+# the +cu121 suffixed versions instead.
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.3.0+cpu
+torchvision==0.18.0+cpu
+torchaudio==2.3.0+cpu
 
 # ── Data & Scientific Computing ─────────────────────────────
 # NumPy is the universal language of numerical arrays in Python.
@@ -81,6 +84,12 @@ python-dotenv==1.0.1
 # ── Dataset Download ────────────────────────────────────────
 # kagglehub is Kaggle's official lightweight download client.
 kagglehub==0.2.9
+
+# ── Hugging Face Hub ────────────────────────────────────────
+# huggingface_hub lets us push the trained model to a HF model
+# repository and download it again at app startup on HF Spaces.
+# This avoids storing large .pth files in the git repository.
+huggingface_hub==0.23.2
 
 # ── Progress Bars & Utilities ───────────────────────────────
 # tqdm wraps any Python iterable with a neat progress bar so

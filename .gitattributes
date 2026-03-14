@@ -1,0 +1,30 @@
+# .gitattributes — Git Large File Storage (LFS) Configuration
+#
+# Git LFS replaces large binary files in the repository with small text
+# pointers.  The actual binary content is stored on a separate LFS server.
+# This keeps the git repository fast to clone while still versioning
+# large files like model checkpoints.
+#
+# Setup LFS once on your machine:
+#   git lfs install
+#
+# After that, any file matching the patterns below is automatically
+# tracked through LFS on your next `git add`.
+
+# PyTorch model checkpoints
+*.pth filter=lfs diff=lfs merge=lfs -text
+*.pt  filter=lfs diff=lfs merge=lfs -text
+
+# ONNX exported models
+*.onnx filter=lfs diff=lfs merge=lfs -text
+
+# Large data files (just in case any slip through)
+*.zip  filter=lfs diff=lfs merge=lfs -text
+*.tar  filter=lfs diff=lfs merge=lfs -text
+*.gz   filter=lfs diff=lfs merge=lfs -text
+
+# Standard line-ending normalisation for Python source files
+*.py  text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.md  text eol=lf
