@@ -1,0 +1,187 @@
+# =============================================================================
+# configs/config.yaml  —  The Single Source of Truth for Every Hyperparameter
+# =============================================================================
+#
+# Why does this file exist?
+# --------------------------
+# Hard-coding numbers like `learning_rate = 0.001` directly inside training
+# scripts is tempting when you are just getting started, but it creates a
+# nightmare later on.  When you want to try a different batch size you have
+# to dig through several Python files to find every place you used it.
+# Keeping every tunable value here means one edit, everywhere updated.
+#
+# Professional ML teams call this "configuration-driven development".
+# It also makes it trivially easy to swap experiments: copy this file,
+# change two numbers, re-run — the code never changes.
+#
+# YAML syntax crash course
+# -------------------------
+# key: value          → a single setting
+# section:            → a group of related settings (indented below)
+#   key: value
+# Lists use dashes:   - item1
+# =============================================================================
+
+# ── Paths ────────────────────────────────────────────────────────────────────
+# Everything is relative to the project root so the project can live anywhere
+# on any machine without breaking.
+paths:
+  data_raw: "data/raw"
+  data_processed: "data/processed"
+  data_splits: "data/splits"
+  models: "models"
+  checkpoints: "models/checkpoints"
+  logs: "logs"
+  tensorboard: "logs/tensorboard"
+  mlflow_uri: "mlflow_runs"
+  reports: "reports"
+  figures: "reports/figures"
+
+# ── Dataset ──────────────────────────────────────────────────────────────────
+dataset:
+  # The Kaggle dataset handle used by kagglehub.dataset_download()
+  kaggle_handle: "vipoooool/new-plant-diseases-dataset"
+
+  # After download, the images live in sub-folders named by class.
+  # This is the standard ImageFolder layout that PyTorch knows how to read.
+  train_dir: "New Plant Diseases Dataset(Augmented)/New Plant Diseases Dataset(Augmented)/train"
+  valid_dir: "New Plant Diseases Dataset(Augmented)/New Plant Diseases Dataset(Augmented)/valid"
+
+  # How many unique disease / healthy-plant categories exist in this dataset.
+  # The New Plant Diseases Dataset has exactly 38 classes.
+  num_classes: 38
+
+  # The fraction of the validation set we keep as a hold-out test set.
+  # 0.5 means we split validation 50/50 into val and test.
+  test_split: 0.5
+
+# ── Image Pre-processing ─────────────────────────────────────────────────────
+image:
+  # EfficientNetB4 was trained on ImageNet at 380×380 pixels.
+  # Using the same size that the backbone was trained on squeezes out the
+  # most accuracy from transfer learning.
+  size: 380
+
+  # ImageNet mean and standard deviation — applied during normalisation.
+  # These exact numbers come from the ImageNet dataset statistics and must
+  # match what was used when the backbone weights were first trained.
+  mean: [0.485, 0.456, 0.406]
+  std:  [0.229, 0.224, 0.225]
+
+# ── Data Augmentation ────────────────────────────────────────────────────────
+# Augmentation is how we artificially multiply our dataset by applying random
+# but realistic transformations.  A horizontally flipped leaf is still a
+# diseased leaf — the label does not change, but the pixel pattern does.
+# This teaches the model to be robust to orientation, lighting, and zoom.
+augmentation:
+  horizontal_flip_prob: 0.5   # 50 % of images are flipped left-right
+  vertical_flip_prob: 0.3     # 30 % of images are flipped top-bottom
+  rotation_degrees: 30        # random rotation between -30° and +30°
+  color_jitter:
+    brightness: 0.2           # ± 20 % brightness change
+    contrast: 0.2             # ± 20 % contrast change
+    saturation: 0.2           # ± 20 % saturation change
+    hue: 0.1                  # ± 10 % hue shift
+  random_erasing_prob: 0.1    # 10 % chance to black-out a random patch
+                              # (mimics leaves partially hidden by shadows)
+
+# ── Model Architecture ───────────────────────────────────────────────────────
+model:
+  # The backbone — the pre-trained feature extractor.
+  # "tf_efficientnetv2_s" is EfficientNetV2-Small from the timm library.
+  # EfficientNet was designed to be accurate AND efficient; V2 improves
+  # training speed further with Fused-MBConv blocks.
+  backbone: "tf_efficientnetv2_s"
+
+  # pretrained = true means we download weights that were already trained on
+  # ~1.2 million ImageNet images.  We then fine-tune these weights for our
+  # 38-class plant disease problem.  This is Transfer Learning.
+  pretrained: true
+
+  # Dropout randomly zeros out a fraction of neurons during training.
+  # It acts as a regulariser — it forces the network to learn redundant
+  # representations instead of memorising training examples.
+  dropout_rate: 0.3
+
+  # The size of the hidden layer we add between the backbone output and the
+  # final 38-class prediction head.
+  hidden_dim: 512
+
+# ── Training ─────────────────────────────────────────────────────────────────
+training:
+  # How many images we feed through the model before updating weights.
+  # Larger batches = faster training but more GPU memory.
+  # 32 works comfortably on a 6 GB GPU or a modern CPU.
+  batch_size: 32
+
+  # How many complete passes through the training data.
+  # Early stopping will halt training if validation loss stops improving,
+  # so setting this high is safe.
+  epochs: 50
+
+  # How many CPU worker threads load data in the background while the GPU
+  # trains.  Set to 0 on Windows if you see multiprocessing errors.
+  num_workers: 4
+
+  # ── Optimiser ──────────────────────────────────────────────────────────────
+  # AdamW is Adam with decoupled weight decay — it usually converges faster
+  # than plain SGD and handles sparse gradients well.
+  optimizer: "adamw"
+
+  # The initial learning rate.  After the warmup schedule below kicks in,
+  # this will be ramped up and then gradually decayed.
+  learning_rate: 1.0e-4
+
+  # Weight decay is L2 regularisation.  It penalises large weight values,
+  # nudging the model towards simpler solutions.
+  weight_decay: 1.0e-4
+
+  # ── Learning-Rate Schedule ─────────────────────────────────────────────────
+  # CosineAnnealingLR smoothly reduces the LR from its initial value to
+  # eta_min following a cosine curve.  This often beats a fixed LR because
+  # the model can escape sharp local minima at the start and then settle
+  # into a flat minimum at the end.
+  scheduler: "cosine"
+  eta_min: 1.0e-6
+
+  # ── Two-Stage Fine-Tuning ──────────────────────────────────────────────────
+  # Stage 1 (freeze_backbone_epochs): freeze the backbone, only train the
+  # new classification head.  This stops the pre-trained features being
+  # destroyed by large gradient updates in the first few epochs.
+  # Stage 2: unfreeze everything and train end-to-end at a lower LR.
+  freeze_backbone_epochs: 5
+
+  # ── Early Stopping ─────────────────────────────────────────────────────────
+  # If validation loss does not improve for `patience` epochs in a row,
+  # we stop training.  This saves time and prevents overfitting.
+  early_stopping_patience: 10
+
+  # The minimum improvement that counts as "better" — prevents stopping on
+  # noise fluctuations.
+  early_stopping_delta: 0.001
+
+  # ── Mixed Precision ────────────────────────────────────────────────────────
+  # Uses float16 instead of float32 for forward passes.  On CUDA GPUs this
+  # roughly doubles training speed and halves memory usage with no accuracy
+  # loss.  Safe to set to false on CPU.
+  use_amp: true
+
+  # Save a checkpoint every N epochs regardless of validation loss.
+  save_every_n_epochs: 5
+
+# ── MLflow ───────────────────────────────────────────────────────────────────
+mlflow:
+  experiment_name: "plant-disease-classifier"
+  run_name_prefix: "efficientnet_"
+
+# ── Inference ────────────────────────────────────────────────────────────────
+inference:
+  # Path to the best model saved during training.
+  model_path: "models/best_model.pth"
+
+  # Confidence threshold.  Predictions below this value are shown as
+  # "uncertain" in the Streamlit app so users know to be cautious.
+  confidence_threshold: 0.5
+
+  # Top-K predictions shown in the app results panel.
+  top_k: 5

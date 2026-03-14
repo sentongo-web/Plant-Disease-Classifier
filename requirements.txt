@@ -1,0 +1,116 @@
+# ============================================================
+# Plant Disease Classifier — Python Dependencies
+# ============================================================
+# This file lists every Python package the project needs.
+# Running `pip install -r requirements.txt` inside the `plants`
+# virtual environment installs all of them in one shot.
+#
+# Why pin versions?  So that anyone who clones this repo six
+# months from now gets the exact same environment and the code
+# runs without mysterious breakage.  It is one of the most
+# important practices in professional machine-learning projects.
+# ============================================================
+
+# ── Deep Learning Framework ─────────────────────────────────
+# PyTorch is the backbone of the whole modelling pipeline.
+# We use the CPU-only build here so the requirements file works
+# on every machine.  If you have an NVIDIA GPU, replace these
+# three lines with the CUDA wheels from pytorch.org.
+torch==2.3.0
+torchvision==0.18.0
+torchaudio==2.3.0
+
+# ── Data & Scientific Computing ─────────────────────────────
+# NumPy is the universal language of numerical arrays in Python.
+numpy==1.26.4
+
+# Pandas lets us treat tabular data (CSV logs, class maps, etc.)
+# like a spreadsheet inside Python — incredibly handy for
+# organising results and building reports.
+pandas==2.2.2
+
+# Scikit-learn gives us evaluation helpers (confusion matrices,
+# classification reports, stratified splitting) without having
+# to code them from scratch.
+scikit-learn==1.4.2
+
+# ── Image Processing ────────────────────────────────────────
+# Pillow (PIL) is what PyTorch's ImageFolder and transforms use
+# under the hood to open and resize images.
+Pillow==10.3.0
+
+# OpenCV gives us faster image I/O and computer-vision utilities
+# such as drawing bounding boxes in demo screens.
+opencv-python==4.9.0.80
+
+# ── Experiment Tracking ─────────────────────────────────────
+# MLflow records every training run: hyperparameters, metrics,
+# and the saved model artefact.  Think of it as a lab notebook
+# that fills itself in automatically.
+mlflow==2.13.0
+
+# ── Visualisation ───────────────────────────────────────────
+# Matplotlib is the workhorse for plots — loss curves, accuracy
+# curves, sample grids, etc.
+matplotlib==3.9.0
+
+# Seaborn sits on top of Matplotlib and produces publication-
+# quality statistical graphics (heatmaps, distribution plots)
+# with almost no extra code.
+seaborn==0.13.2
+
+# Plotly creates interactive charts that look great inside the
+# Streamlit app — hover to see exact values, zoom in, etc.
+plotly==5.22.0
+
+# ── Web Application ─────────────────────────────────────────
+# Streamlit turns a plain Python script into a polished web app.
+# No HTML, CSS, or JavaScript knowledge required.
+streamlit==1.35.0
+
+# ── Configuration Management ────────────────────────────────
+# PyYAML reads the configs/config.yaml file into a Python dict.
+# Keeping every magic number in one YAML file means you never
+# have to hunt through source code to change a learning rate.
+PyYAML==6.0.1
+
+# python-dotenv loads secrets (like Kaggle API keys) from a
+# local .env file so they are never accidentally committed.
+python-dotenv==1.0.1
+
+# ── Dataset Download ────────────────────────────────────────
+# kagglehub is Kaggle's official lightweight download client.
+kagglehub==0.2.9
+
+# ── Progress Bars & Utilities ───────────────────────────────
+# tqdm wraps any Python iterable with a neat progress bar so
+# you always know how far along a training epoch or download is.
+tqdm==4.66.4
+
+# Rich makes terminal output beautiful — coloured tables,
+# panels, and progress spinners with one import.
+rich==13.7.1
+
+# ── Model Utilities ─────────────────────────────────────────
+# timm (PyTorch Image Models) contains hundreds of pre-trained
+# architectures.  We use it to pull EfficientNet weights that
+# were already trained on ImageNet, saving weeks of compute.
+timm==1.0.3
+
+# torchinfo prints a clean summary of any PyTorch model —
+# layer names, output shapes, and parameter counts — just like
+# Keras' model.summary().
+torchinfo==1.8.0
+
+# ── Notebook Support ────────────────────────────────────────
+# ipykernel lets VS Code and JupyterLab run notebooks inside
+# the `plants` virtual environment.
+ipykernel==6.29.4
+jupyterlab==4.2.1
+
+# ── Code Quality ────────────────────────────────────────────
+# These are not needed at runtime but make development cleaner.
+# black auto-formats code so the whole team writes in one style.
+# flake8 catches common mistakes before they reach production.
+black==24.4.2
+flake8==7.0.0

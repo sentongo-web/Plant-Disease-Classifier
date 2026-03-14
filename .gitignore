@@ -1,0 +1,59 @@
+# ── Virtual environments ──────────────────────────────────────────────────────
+plants/
+venv/
+.venv/
+env/
+
+# ── Python bytecode ───────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# ── Data — never commit large datasets to git ────────────────────────────────
+# The Kaggle dataset is 3 GB.  Commit code, not data.
+data/raw/
+data/processed/
+data/splits/
+*.csv.gz
+
+# ── Model weights — large binary files belong in model registries ─────────────
+models/best_model.pth
+models/checkpoints/
+
+# ── Secrets — NEVER commit API keys ──────────────────────────────────────────
+.env
+.kaggle/
+kaggle.json
+*.key
+*_secret*
+
+# ── Logs and reports ─────────────────────────────────────────────────────────
+logs/
+*.log
+reports/figures/
+reports/*.json
+reports/*.csv
+
+# ── MLflow ────────────────────────────────────────────────────────────────────
+mlflow_runs/
+
+# ── Jupyter checkpoints ───────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# ── OS files ──────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── IDE ───────────────────────────────────────────────────────────────────────
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# ── Build artefacts ───────────────────────────────────────────────────────────
+build/
+dist/
+*.egg-info/
