@@ -117,10 +117,17 @@ class PlantDiseaseModel(nn.Module):
             global_pool="avg",      # keep global average pooling
         )
         backbone_out_features = self.backbone.num_features
+
+        # Gradient checkpointing trades ~25 % training speed for ~40 % less
+        # GPU memory.  Essential when fine-tuning the full backbone on a 15 GB
+        # T4 at any reasonable batch size.  timm exposes this via one call.
+        self.backbone.set_grad_checkpointing(enable=True)
+
         logger.info(
             f"Backbone: {backbone_name} | "
             f"Pretrained: {pretrained} | "
-            f"Feature dim: {backbone_out_features}"
+            f"Feature dim: {backbone_out_features} | "
+            f"Grad checkpointing: ON"
         )
 
         # ── Custom Classification Head ────────────────────────────────────────
